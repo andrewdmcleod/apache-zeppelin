@@ -1,0 +1,357 @@
+{
+  "paragraphs": [
+    {
+      "text": "%md\n## Welcome to the Realtime Syslog Analytics tutorial, powered by Juju.\n### In this live tutorial we will demonstrate three phases of a big data solution:\n#### 1. Data Ingestion: Flume-Syslog -\u003e Flume-HDFS\n#### 2. Data Processing: Spark+YARN\n#### 3. Data Visualization: SparkSQL+Zeppelin",
+      "config": {
+        "colWidth": 12.0,
+        "graph": {
+          "mode": "table",
+          "height": 300.0,
+          "optionOpen": false,
+          "keys": [],
+          "values": [],
+          "groups": [],
+          "scatter": {}
+        },
+        "tableHide": false
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "jobName": "paragraph_1440101679810_1108841391",
+      "id": "20150820-151439_133078543",
+      "result": {
+        "code": "SUCCESS",
+        "type": "HTML",
+        "msg": "\u003ch2\u003eWelcome to the Realtime Syslog Analytics tutorial, powered by Juju.\u003c/h2\u003e\n\u003ch3\u003eIn this live tutorial we will demonstrate three phases of a big data solution:\u003c/h3\u003e\n\u003ch4\u003e1. Data Ingestion: Flume-Syslog -\u003e Flume-HDFS\u003c/h4\u003e\n\u003ch4\u003e2. Data Processing: Spark+YARN\u003c/h4\u003e\n\u003ch4\u003e3. Data Visualization: SparkSQL+Zeppelin\u003c/h4\u003e\n"
+      },
+      "dateCreated": "Aug 20, 2015 3:14:39 PM",
+      "dateStarted": "Sep 18, 2015 6:25:43 PM",
+      "dateFinished": "Sep 18, 2015 6:25:43 PM",
+      "status": "FINISHED",
+      "progressUpdateIntervalMs": 500
+    },
+    {
+      "title": "Generate Data and Verify Ingestion",
+      "text": "%sh\n# Generate syslog messages by trying to ssh to the hdfs-master unit.\n# This will likely result in a \u0027publickey denied\u0027 error, but it will\n# be enough to trigger a syslog event on the hdfs-master.\nfor i in `seq 1 10`;\ndo\n  ssh -oStrictHostKeyChecking\u003dno hdfs-master-0 uptime \u003e/dev/null 2\u003e\u00261\n  sleep 1\ndone\n\n# Check if Flume has collected and sent the syslog messages to HDFS.\n# If no output is seen from this command, wait a few minutes and try\n# again. The amount of time between Flume ingesting the event and it\n# being available in HDFS is controlled by the \u0027roll_interval\u0027\n# configuration option in the flume-hdfs charm.\nhadoop fs -ls -R /user/flume/flume-syslog | tail",
+      "config": {
+        "colWidth": 12.0,
+        "graph": {
+          "mode": "table",
+          "height": 300.0,
+          "optionOpen": false,
+          "keys": [],
+          "values": [],
+          "groups": [],
+          "scatter": {}
+        },
+        "title": true,
+        "tableHide": false,
+        "editorHide": false
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "jobName": "paragraph_1440112183363_1890510694",
+      "id": "20150820-180943_1527660289",
+      "result": {
+        "code": "SUCCESS",
+        "type": "TEXT",
+        "msg": "drwxr-xr-x   - flume supergroup          0 2015-09-22 03:19 /user/flume/flume-syslog/2015-09-22\n-rw-r--r--   3 flume supergroup        302 2015-09-22 03:12 /user/flume/flume-syslog/2015-09-22/FlumeData.1442891213622\n-rw-r--r--   3 flume supergroup       2328 2015-09-22 03:19 /user/flume/flume-syslog/2015-09-22/FlumeData.1442891678998\n"
+      },
+      "dateCreated": "Aug 20, 2015 6:09:43 PM",
+      "dateStarted": "Sep 22, 2015 3:29:15 AM",
+      "dateFinished": "Sep 22, 2015 3:29:28 AM",
+      "status": "FINISHED",
+      "progressUpdateIntervalMs": 500
+    },
+    {
+      "title": "Simple Data Processing with Scala",
+      "text": "// Output the number of sshd syslog events\nsc.textFile(\"/user/flume/flume-syslog/*/*\").filter(line \u003d\u003e line.contains(\"sshd\")).count()",
+      "config": {
+        "colWidth": 12.0,
+        "graph": {
+          "mode": "table",
+          "height": 300.0,
+          "optionOpen": false,
+          "keys": [],
+          "values": [],
+          "groups": [],
+          "scatter": {}
+        },
+        "title": true,
+        "tableHide": false,
+        "editorHide": false
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "jobName": "paragraph_1440112260119_-1393028364",
+      "id": "20150820-181100_389628381",
+      "result": {
+        "code": "SUCCESS",
+        "type": "TEXT",
+        "msg": "res12: Long \u003d 40\n"
+      },
+      "dateCreated": "Aug 20, 2015 6:11:00 PM",
+      "dateStarted": "Sep 22, 2015 3:29:45 AM",
+      "dateFinished": "Sep 22, 2015 3:29:46 AM",
+      "status": "FINISHED",
+      "progressUpdateIntervalMs": 500
+    },
+    {
+      "title": "Data processing to enable future queries",
+      "text": "import org.joda.time.DateTime\nimport org.joda.time.format.{DateTimeFormatterBuilder, DateTimeFormat}\nimport scala.util.Try\nval reSystemLog \u003d \"\"\"^\\\u003c\\d+\\\u003e([A-Za-z0-9, ]+\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{3})?)\\s+(\\S+)\\s+([^\\[]+)\\[(\\d+)\\]\\s*:?\\s*(.*)\"\"\".r\ncase class SyslogMessage(timestamp: String, host: Option[String], process: String, pid: Int, message: String)\n\nval lines \u003d sc.textFile(\"/user/flume/flume-syslog/*/*\")\nval events \u003d lines.flatMap {\n      case reSystemLog(timestamp,hostname, proc, pidS, msg) \u003d\u003e\n        for {pid \u003c- Try(pidS.toInt).toOption} yield SyslogMessage(timestamp,Some(hostname), proc, pid, msg)\n      case _ \u003d\u003e None\n    }.toDF()\n\nevents.registerTempTable(\"syslog\")\n",
+      "config": {
+        "colWidth": 12.0,
+        "graph": {
+          "mode": "table",
+          "height": 300.0,
+          "optionOpen": false,
+          "keys": [],
+          "values": [],
+          "groups": [],
+          "scatter": {}
+        },
+        "title": true,
+        "editorHide": false,
+        "tableHide": false
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "jobName": "paragraph_1440133397982_798196016",
+      "id": "20150821-000317_766530322",
+      "result": {
+        "code": "SUCCESS",
+        "type": "TEXT",
+        "msg": "import org.joda.time.DateTime\nimport org.joda.time.format.{DateTimeFormatterBuilder, DateTimeFormat}\nimport scala.util.Try\nreSystemLog: scala.util.matching.Regex \u003d ^\\\u003c\\d+\\\u003e([A-Za-z0-9, ]+\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{3})?)\\s+(\\S+)\\s+([^\\[]+)\\[(\\d+)\\]\\s*:?\\s*(.*)\ndefined class SyslogMessage\nlines: org.apache.spark.rdd.RDD[String] \u003d /user/flume/flume-syslog/*/* MapPartitionsRDD[50] at textFile at \u003cconsole\u003e:31\nevents: org.apache.spark.sql.DataFrame \u003d [timestamp: string, host: string, process: string, pid: int, message: string]\n"
+      },
+      "dateCreated": "Aug 21, 2015 12:03:17 AM",
+      "dateStarted": "Sep 22, 2015 3:23:23 AM",
+      "dateFinished": "Sep 22, 2015 3:23:26 AM",
+      "status": "FINISHED",
+      "progressUpdateIntervalMs": 500
+    },
+    {
+      "title": "Data Visualization",
+      "text": "%sql \nselect process, count(1) value\nfrom syslog\ngroup by process \norder by process",
+      "config": {
+        "colWidth": 4.0,
+        "graph": {
+          "mode": "pieChart",
+          "height": 300.0,
+          "optionOpen": false,
+          "keys": [
+            {
+              "name": "process",
+              "index": 0.0,
+              "aggr": "sum"
+            }
+          ],
+          "values": [
+            {
+              "name": "value",
+              "index": 1.0,
+              "aggr": "sum"
+            }
+          ],
+          "groups": [],
+          "scatter": {
+            "xAxis": {
+              "name": "process",
+              "index": 0.0,
+              "aggr": "sum"
+            },
+            "yAxis": {
+              "name": "value",
+              "index": 1.0,
+              "aggr": "sum"
+            }
+          }
+        },
+        "title": true,
+        "tableHide": false,
+        "editorHide": false
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "jobName": "paragraph_1440473498968_444762596",
+      "id": "20150824-223138_1548703563",
+      "result": {
+        "code": "SUCCESS",
+        "type": "TABLE",
+        "msg": "process\tvalue\nCRON\t3\nsshd\t20\n"
+      },
+      "dateCreated": "Aug 24, 2015 10:31:38 PM",
+      "dateStarted": "Sep 22, 2015 3:29:54 AM",
+      "dateFinished": "Sep 22, 2015 3:29:57 AM",
+      "status": "FINISHED",
+      "progressUpdateIntervalMs": 500
+    },
+    {
+      "title": "Data Visualization",
+      "text": "%sql \nselect host, count(1) value\nfrom syslog\nwhere timestamp \u003e ${maxDate\u003d\"Sep 15\"}\ngroup by host\n",
+      "config": {
+        "colWidth": 4.0,
+        "graph": {
+          "mode": "table",
+          "height": 300.0,
+          "optionOpen": false,
+          "keys": [
+            {
+              "name": "host",
+              "index": 0.0,
+              "aggr": "sum"
+            }
+          ],
+          "values": [
+            {
+              "name": "value",
+              "index": 1.0,
+              "aggr": "sum"
+            }
+          ],
+          "groups": [],
+          "scatter": {
+            "yAxis": {
+              "name": "value",
+              "index": 1.0,
+              "aggr": "sum"
+            }
+          }
+        },
+        "title": true,
+        "tableHide": false
+      },
+      "settings": {
+        "params": {
+          "maxDate": "\"Sep 15\""
+        },
+        "forms": {
+          "maxDate": {
+            "name": "maxDate",
+            "defaultValue": "\"Sep 15\"",
+            "hidden": false
+          }
+        }
+      },
+      "jobName": "paragraph_1440137477230_886878134",
+      "id": "20150821-011117_310225391",
+      "result": {
+        "code": "SUCCESS",
+        "type": "TABLE",
+        "msg": "host\tvalue\nhdfs-master-0\t23\n"
+      },
+      "dateCreated": "Aug 21, 2015 1:11:17 AM",
+      "dateStarted": "Sep 22, 2015 3:30:03 AM",
+      "dateFinished": "Sep 22, 2015 3:30:05 AM",
+      "status": "FINISHED",
+      "progressUpdateIntervalMs": 500
+    },
+    {
+      "title": "Data Visualization",
+      "text": "%sql \nselect process, timestamp, message\nfrom syslog\nwhere timestamp \u003e ${maxDate\u003d\"Sep 15\"}\n",
+      "config": {
+        "colWidth": 4.0,
+        "graph": {
+          "mode": "table",
+          "height": 300.0,
+          "optionOpen": false,
+          "keys": [
+            {
+              "name": "process",
+              "index": 0.0,
+              "aggr": "sum"
+            }
+          ],
+          "values": [
+            {
+              "name": "timestamp",
+              "index": 1.0,
+              "aggr": "sum"
+            }
+          ],
+          "groups": [],
+          "scatter": {
+            "xAxis": {
+              "name": "process",
+              "index": 0.0,
+              "aggr": "sum"
+            }
+          }
+        },
+        "title": true,
+        "tableHide": false
+      },
+      "settings": {
+        "params": {
+          "maxDate": "\"Sep 15\""
+        },
+        "forms": {
+          "maxDate": {
+            "name": "maxDate",
+            "defaultValue": "\"Sep 15\"",
+            "hidden": false
+          }
+        }
+      },
+      "jobName": "paragraph_1440163786226_421898739",
+      "id": "20150821-082946_601268612",
+      "result": {
+        "code": "SUCCESS",
+        "type": "TABLE",
+        "msg": "process\ttimestamp\tmessage\nsshd\tSep 22 03:14:23\terror: Could not load host key: /etc/ssh/ssh_host_ed25519_key\nsshd\tSep 22 03:14:23\tConnection closed by 172.31.13.239 [preauth]\nsshd\tSep 22 03:14:24\terror: Could not load host key: /etc/ssh/ssh_host_ed25519_key\nsshd\tSep 22 03:14:24\tConnection closed by 172.31.13.239 [preauth]\nsshd\tSep 22 03:14:25\terror: Could not load host key: /etc/ssh/ssh_host_ed25519_key\nsshd\tSep 22 03:14:25\tConnection closed by 172.31.13.239 [preauth]\nsshd\tSep 22 03:14:26\terror: Could not load host key: /etc/ssh/ssh_host_ed25519_key\nsshd\tSep 22 03:14:26\tConnection closed by 172.31.13.239 [preauth]\nsshd\tSep 22 03:14:27\terror: Could not load host key: /etc/ssh/ssh_host_ed25519_key\nsshd\tSep 22 03:14:27\tConnection closed by 172.31.13.239 [preauth]\nsshd\tSep 22 03:14:28\terror: Could not load host key: /etc/ssh/ssh_host_ed25519_key\nsshd\tSep 22 03:14:28\tConnection closed by 172.31.13.239 [preauth]\nsshd\tSep 22 03:14:29\terror: Could not load host key: /etc/ssh/ssh_host_ed25519_key\nsshd\tSep 22 03:14:29\tConnection closed by 172.31.13.239 [preauth]\nsshd\tSep 22 03:14:30\terror: Could not load host key: /etc/ssh/ssh_host_ed25519_key\nsshd\tSep 22 03:14:30\tConnection closed by 172.31.13.239 [preauth]\nsshd\tSep 22 03:14:31\terror: Could not load host key: /etc/ssh/ssh_host_ed25519_key\nsshd\tSep 22 03:14:32\tConnection closed by 172.31.13.239 [preauth]\nsshd\tSep 22 03:14:33\terror: Could not load host key: /etc/ssh/ssh_host_ed25519_key\nsshd\tSep 22 03:14:33\tConnection closed by 172.31.13.239 [preauth]\nCRON\tSep 22 03:17:01\tpam_unix(cron:session): session opened for user root by (uid\u003d0)\nCRON\tSep 22 03:17:01\t(root) CMD (   cd / \u0026\u0026 run-parts --report /etc/cron.hourly)\nCRON\tSep 22 03:17:01\tpam_unix(cron:session): session closed for user root\n"
+      },
+      "dateCreated": "Aug 21, 2015 8:29:46 AM",
+      "dateStarted": "Sep 22, 2015 3:30:26 AM",
+      "dateFinished": "Sep 22, 2015 3:30:26 AM",
+      "status": "FINISHED",
+      "progressUpdateIntervalMs": 500
+    },
+    {
+      "text": "",
+      "config": {
+        "colWidth": 12.0,
+        "graph": {
+          "mode": "table",
+          "height": 300.0,
+          "optionOpen": false,
+          "keys": [],
+          "values": [],
+          "groups": [],
+          "scatter": {}
+        },
+        "tableHide": false
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "jobName": "paragraph_1440473909272_653880463",
+      "id": "20150824-223829_186145308",
+      "result": {
+        "code": "SUCCESS",
+        "type": "TEXT"
+      },
+      "dateCreated": "Aug 24, 2015 10:38:29 PM",
+      "dateStarted": "Sep 18, 2015 5:59:44 PM",
+      "dateFinished": "Sep 18, 2015 6:03:23 PM",
+      "status": "FINISHED",
+      "progressUpdateIntervalMs": 500
+    }
+  ],
+  "name": "Zeppelin Flume/HDFS Tutorial",
+  "id": "flume-tutorial",
+  "angularObjects": {},
+  "config": {
+    "looknfeel": "default"
+  },
+  "info": {}
+}

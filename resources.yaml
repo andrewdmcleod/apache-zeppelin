@@ -1,0 +1,20 @@
+options:
+  output_dir: /home/ubuntu/resources
+resources:
+  pathlib:
+    pypi: path.py>=7.0
+  jujubigdata:
+    pypi: jujubigdata>=4.0.0,<5.0.0
+optional_resources:
+  zeppelin-ppc64le:
+    url: https://s3.amazonaws.com/jujubigdata/apache/ppc64le/zeppelin-0.5.0-SNAPSHOT-817f57d.tar.gz
+    hash: 817f57d58e2ad84d195ea82008692bad270c23e30fc95e7f971708fa52b5408e
+    hash_type: sha256
+#  zeppelin-x86_64:
+#    url: https://s3.amazonaws.com/jujubigdata/apache/x86_64/zeppelin-0.5.0-SNAPSHOT-de32cc4.tar.gz
+#    hash: de32cc4ebdf0ca54fff975ab0b2810d42b0a939fa4ec0757152f1e52989d1afc
+#    hash_type: sha256
+  zeppelin-x86_64:
+    url: https://s3-eu-west-1.amazonaws.com/admcleod-resources/zeppelin060-x86_spark141_hadoop271.tar.gz
+    hash: e67cc21c9b0defc34a3674a4eadf9072569983ad5876fe6ca0aea7c184bc8e31
+    hash_type: sha256

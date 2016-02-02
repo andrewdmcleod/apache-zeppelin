@@ -1,0 +1,452 @@
+{
+  "paragraphs": [
+    {
+      "text": "%md\n## Google NGram Processing Tutorial\n#### Sequence files, LZO compression, distcp from s3\n\n \nThis tutorial ingests and runs jobs on google 1gram - en GB dataset. \nSee https://aws.amazon.com/datasets/google-books-ngrams/ for more details and other datasets.\nIt is approximately 2.3GB compressed (4.3 uncompressed) and processing the sql statements \nbelow will take a significant amount of time with only 3 compute-slaves. \n \nE.g., with 13 executor instances:\n* Top 10 words since 1990 - 308 seconds \n* Unique Words Per Year - 111 seconds \n\nTo achieve this, we use a resource hosted in AWS s3. It is possible to refer directly to that URL, but for this tutorial we will distcp the resource to HDFS before processing. \nIf you want to use the s3 resource directly, uncomment the line in the \"Processing The Resource\" paragraph\n\nThe second step is to break down the file into strings and map them into lines - this sequence file is block compressed with lzo. It is already LZO indexed.\n\nWe then break those lines into word, year, word count, pages that those words occured on and books those words were found in.",
+      "config": {
+        "colWidth": 12.0,
+        "graph": {
+          "mode": "table",
+          "height": 300.0,
+          "optionOpen": false,
+          "keys": [],
+          "values": [],
+          "groups": [],
+          "scatter": {}
+        }
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "jobName": "paragraph_1446203945528_-1420612691",
+      "id": "20151030-111905_1539594005",
+      "result": {
+        "code": "SUCCESS",
+        "type": "HTML",
+        "msg": "\u003ch2\u003eGoogle NGram Processing Tutorial\u003c/h2\u003e\n\u003ch4\u003eSequence files, LZO compression, distcp from s3\u003c/h4\u003e\n\u003cp\u003eThis tutorial ingests and runs jobs on google 1gram - en GB dataset.\n\u003cbr  /\u003eSee https://aws.amazon.com/datasets/google-books-ngrams/ for more details and other datasets.\n\u003cbr  /\u003eIt is approximately 2.3GB compressed (4.3 uncompressed) and processing the sql statements\n\u003cbr  /\u003ebelow will take a significant amount of time with only 3 compute-slaves.\u003c/p\u003e\n\u003cp\u003eE.g., with 13 executor instances:\u003c/p\u003e\n\u003cul\u003e\n\u003cli\u003eTop 10 words since 1990 - 308 seconds\u003c/li\u003e\n\u003cli\u003eUnique Words Per Year - 111 seconds\u003c/li\u003e\n\u003c/ul\u003e\n\u003cp\u003eTo achieve this, we use a resource hosted in AWS s3. It is possible to refer directly to that URL, but for this tutorial we will distcp the resource to HDFS before processing.\n\u003cbr  /\u003eIf you want to use the s3 resource directly, uncomment the line in the \u0026ldquo;Processing The Resource\u0026rdquo; paragraph\u003c/p\u003e\n\u003cp\u003eThe second step is to break down the file into strings and map them into lines - this sequence file is block compressed with lzo. It is already LZO indexed.\u003c/p\u003e\n\u003cp\u003eWe then break those lines into word, year, word count, pages that those words occured on and books those words were found in.\u003c/p\u003e\n"
+      },
+      "dateCreated": "Oct 30, 2015 11:19:05 AM",
+      "dateStarted": "Oct 30, 2015 12:59:07 PM",
+      "dateFinished": "Oct 30, 2015 12:59:09 PM",
+      "status": "FINISHED",
+      "progressUpdateIntervalMs": 500
+    },
+    {
+      "title": "Fetching the resource",
+      "text": "%sh\nif ! hadoop fs -test -e hdfs:///user/ubuntu/inputgrams/enggb ; then\n    hadoop distcp -libjars $HADOOP_HOME/share/hadoop/tools/lib/ -Dfs.s3n.awsAccessKeyId\u003d${AWS_ACCESS_KEY} -Dfs.s3n.awsSecretAccessKey\u003d${AWS_SECRET_KEY} s3n://datasets.elasticmapreduce/ngrams/books/20090715/eng-gb-all/1gram/data inputgrams/enggb\nelse\n    echo Data already exists - not re-downloading\nfi",
+      "config": {
+        "colWidth": 12.0,
+        "graph": {
+          "mode": "table",
+          "height": 300.0,
+          "optionOpen": false,
+          "keys": [],
+          "values": [],
+          "groups": [],
+          "scatter": {}
+        },
+        "title": true,
+        "tableHide": false
+      },
+      "settings": {
+        "params": {
+          "AWS_ACCESS_KEY": "YOURS_HERE",
+          "AWS_SECRET_KEY": "YOURS_HERE"
+        },
+        "forms": {
+          "AWS_ACCESS_KEY": {
+            "name": "AWS_ACCESS_KEY",
+            "defaultValue": "",
+            "hidden": false
+          },
+          "AWS_SECRET_KEY": {
+            "name": "AWS_SECRET_KEY",
+            "defaultValue": "",
+            "hidden": false
+          }
+        }
+      },
+      "jobName": "paragraph_1446203538457_-62983776",
+      "id": "20151030-111218_1218829617",
+      "result": {
+        "code": "SUCCESS",
+        "type": "TEXT",
+        "msg": "15/10/30 11:52:34 INFO tools.DistCp: Input Options: DistCpOptions{atomicCommit\u003dfalse, syncFolder\u003dfalse, deleteMissing\u003dfalse, ignoreFailures\u003dfalse, maxMaps\u003d20, sslConfigurationFile\u003d\u0027null\u0027, copyStrategy\u003d\u0027uniformsize\u0027, sourceFileListing\u003dnull, sourcePaths\u003d[s3n://datasets.elasticmapreduce/ngrams/books/20090715/eng-gb-all/1gram/data], targetPath\u003dinputgrams/enggb}\n15/10/30 11:52:36 INFO client.RMProxy: Connecting to ResourceManager at yarn-master-0/10.146.247.9:8032\n15/10/30 11:52:42 INFO Configuration.deprecation: io.sort.mb is deprecated. Instead, use mapreduce.task.io.sort.mb\n15/10/30 11:52:42 INFO Configuration.deprecation: io.sort.factor is deprecated. Instead, use mapreduce.task.io.sort.factor\n15/10/30 11:52:44 INFO client.RMProxy: Connecting to ResourceManager at yarn-master-0/10.146.247.9:8032\n15/10/30 11:52:45 INFO mapreduce.JobSubmitter: number of splits:1\n15/10/30 11:52:46 INFO mapreduce.JobSubmitter: Submitting tokens for job: job_1446198021449_0004\n15/10/30 11:52:47 INFO impl.YarnClientImpl: Submitted application application_1446198021449_0004\n15/10/30 11:52:47 INFO mapreduce.Job: The url to track the job: http://yarn-master-0:8088/proxy/application_1446198021449_0004/\n15/10/30 11:52:47 INFO tools.DistCp: DistCp job-id: job_1446198021449_0004\n15/10/30 11:52:47 INFO mapreduce.Job: Running job: job_1446198021449_0004\n15/10/30 11:53:02 INFO mapreduce.Job: Job job_1446198021449_0004 running in uber mode : false\n15/10/30 11:53:02 INFO mapreduce.Job:  map 0% reduce 0%\n15/10/30 11:53:18 INFO mapreduce.Job:  map 100% reduce 0%\n15/10/30 11:55:11 INFO mapreduce.Job: Job job_1446198021449_0004 completed successfully\n15/10/30 11:55:11 INFO mapreduce.Job: Counters: 38\n\tFile System Counters\n\t\tFILE: Number of bytes read\u003d0\n\t\tFILE: Number of bytes written\u003d96982\n\t\tFILE: Number of read operations\u003d0\n\t\tFILE: Number of large read operations\u003d0\n\t\tFILE: Number of write operations\u003d0\n\t\tHDFS: Number of bytes read\u003d365\n\t\tHDFS: Number of bytes written\u003d2045214611\n\t\tHDFS: Number of read operations\u003d14\n\t\tHDFS: Number of large read operations\u003d0\n\t\tHDFS: Number of write operations\u003d4\n\t\tS3N: Number of bytes read\u003d2045214611\n\t\tS3N: Number of bytes written\u003d0\n\t\tS3N: Number of read operations\u003d0\n\t\tS3N: Number of large read operations\u003d0\n\t\tS3N: Number of write operations\u003d0\n\tJob Counters \n\t\tLaunched map tasks\u003d1\n\t\tOther local map tasks\u003d1\n\t\tTotal time spent by all maps in occupied slots (ms)\u003d126520\n\t\tTotal time spent by all reduces in occupied slots (ms)\u003d0\n\t\tTotal time spent by all map tasks (ms)\u003d126520\n\t\tTotal vcore-seconds taken by all map tasks\u003d126520\n\t\tTotal megabyte-seconds taken by all map tasks\u003d129556480\n\tMap-Reduce Framework\n\t\tMap input records\u003d1\n\t\tMap output records\u003d0\n\t\tInput split bytes\u003d136\n\t\tSpilled Records\u003d0\n\t\tFailed Shuffles\u003d0\n\t\tMerged Map outputs\u003d0\n\t\tGC time elapsed (ms)\u003d4188\n\t\tCPU time spent (ms)\u003d52290\n\t\tPhysical memory (bytes) snapshot\u003d157646848\n\t\tVirtual memory (bytes) snapshot\u003d791212032\n\t\tTotal committed heap usage (bytes)\u003d59572224\n\tFile Input Format Counters \n\t\tBytes Read\u003d229\n\tFile Output Format Counters \n\t\tBytes Written\u003d0\n\torg.apache.hadoop.tools.mapred.CopyMapper$Counter\n\t\tBYTESCOPIED\u003d2045214611\n\t\tBYTESEXPECTED\u003d2045214611\n\t\tCOPY\u003d1\n"
+      },
+      "dateCreated": "Oct 30, 2015 11:12:18 AM",
+      "dateStarted": "Oct 30, 2015 11:52:25 AM",
+      "dateFinished": "Oct 30, 2015 11:55:11 AM",
+      "status": "FINISHED",
+      "progressUpdateIntervalMs": 500
+    },
+    {
+      "title": "Processing the resource",
+      "text": "import org.apache.spark.rdd.RDD\n\n    case class Ngram(word: String, year: Int, count: Int, pages: Int, books: Int)\n\n    val lines: RDD[String] \u003d sc.sequenceFile(\"hdfs:///user/ubuntu/inputgrams/enggb\", classOf[org.apache.hadoop.io.LongWritable], classOf[org.apache.hadoop.io.Text]).map(_._2.toString).repartition(52).cache() \n    // alternative here for s3://\n    lines.count()\n\n    val ngram \u003d lines.map(s \u003d\u003e s.split (\"\\t\")).filter(s \u003d\u003e s(0) matches \"[A-Za-z].*\").map(\n        s \u003d\u003e Ngram(s(0).toLowerCase,\n                   s(1).toInt,\n                   s(2).toInt,\n                   s(3).toInt,\n                   s(4).toInt\n                )\n    ).toDF()\n    ngram.registerTempTable(\"ngram\")\n    ngram.count()",
+      "config": {
+        "colWidth": 12.0,
+        "graph": {
+          "mode": "table",
+          "height": 300.0,
+          "optionOpen": false,
+          "keys": [],
+          "values": [],
+          "groups": [],
+          "scatter": {}
+        },
+        "title": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "jobName": "paragraph_1446199162203_-1841525223",
+      "id": "20151030-095922_1087518477",
+      "result": {
+        "code": "SUCCESS",
+        "type": "TEXT",
+        "msg": "import org.apache.spark.rdd.RDD\ndefined class Ngram\nlines: org.apache.spark.rdd.RDD[String] \u003d MapPartitionsRDD[15] at repartition at \u003cconsole\u003e:27\nres8: Long \u003d 188660459\nngram: org.apache.spark.sql.DataFrame \u003d [word: string, year: int, count: int, pages: int, books: int]\nres11: Long \u003d 178240315\n"
+      },
+      "dateCreated": "Oct 30, 2015 9:59:22 AM",
+      "dateStarted": "Oct 30, 2015 12:45:35 PM",
+      "dateFinished": "Oct 30, 2015 12:50:54 PM",
+      "status": "FINISHED",
+      "progressUpdateIntervalMs": 500
+    },
+    {
+      "title": "unique words per year",
+      "text": "%sql \nselect year, count(1) value\nfrom ngram \ngroup by year\norder by year",
+      "config": {
+        "colWidth": 6.0,
+        "graph": {
+          "mode": "stackedAreaChart",
+          "height": 300.0,
+          "optionOpen": false,
+          "keys": [
+            {
+              "name": "year",
+              "index": 0.0,
+              "aggr": "sum"
+            }
+          ],
+          "values": [
+            {
+              "name": "value",
+              "index": 1.0,
+              "aggr": "sum"
+            }
+          ],
+          "groups": [],
+          "scatter": {
+            "xAxis": {
+              "name": "year",
+              "index": 0.0,
+              "aggr": "sum"
+            },
+            "yAxis": {
+              "name": "value",
+              "index": 1.0,
+              "aggr": "sum"
+            }
+          }
+        },
+        "title": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "jobName": "paragraph_1446199972057_-1541877517",
+      "id": "20151030-101252_1865856327",
+      "result": {
+        "code": "SUCCESS",
+        "type": "TABLE",
+        "msg": "year\tvalue\n1541\t1350\n1547\t9606\n1551\t8010\n1562\t12494\n1576\t5735\n1582\t4127\n1584\t5091\n1588\t11440\n1590\t6387\n1591\t3733\n1592\t6218\n1593\t8745\n1594\t10866\n1595\t1984\n1596\t11363\n1597\t17656\n1598\t16196\n1599\t10750\n1600\t10535\n1602\t3392\n1603\t21228\n1605\t4432\n1606\t4370\n1607\t5259\n1608\t13814\n1609\t14749\n1611\t2844\n1612\t11493\n1613\t5955\n1615\t2371\n1617\t12626\n1619\t4555\n1620\t4831\n1621\t11804\n1623\t3587\n1627\t4765\n1629\t13253\n1631\t40005\n1632\t21625\n1634\t6911\n1636\t14862\n1638\t26426\n1639\t3644\n1640\t7525\n1641\t6272\n1642\t13841\n1643\t24340\n1644\t15221\n1645\t29347\n1646\t5356\n1647\t15539\n1648\t10285\n1649\t30943\n1650\t14119\n1651\t48245\n1652\t9567\n1653\t38379\n1654\t28277\n1655\t10940\n1656\t16774\n1657\t47978\n1658\t39975\n1659\t66851\n1660\t49325\n1661\t29973\n1662\t19860\n1663\t15054\n1664\t4449\n1665\t22567\n1666\t5487\n1667\t46642\n1668\t41944\n1669\t16635\n1670\t32927\n1671\t38647\n1672\t13885\n1673\t28896\n1674\t8422\n1675\t76484\n1676\t60281\n1677\t76302\n1678\t41271\n1679\t35714\n1680\t32253\n1681\t30188\n1682\t49695\n1683\t55469\n1684\t20617\n1685\t54573\n1686\t44408\n1687\t41336\n1688\t68465\n1689\t41341\n1690\t29564\n1691\t19866\n1692\t17770\n1693\t52460\n1694\t32883\n1695\t35403\n1696\t22054\n1697\t21439\n1698\t57330\n1699\t68544\n1700\t66732\n1701\t105762\n1702\t102463\n1703\t78643\n1704\t83677\n1705\t96091\n1706\t100876\n1707\t119951\n1708\t103726\n1709\t106317\n1710\t120218\n1711\t130917\n1712\t103486\n1713\t114184\n1714\t155153\n1715\t112621\n1716\t85622\n1717\t112165\n1718\t128698\n1719\t118916\n1720\t149758\n1721\t103283\n1722\t166391\n1723\t126387\n1724\t115500\n1725\t114152\n1726\t129939\n1727\t141973\n1728\t122853\n1729\t134017\n1730\t118208\n1731\t120733\n1732\t112582\n1733\t110140\n1734\t127284\n1735\t135073\n1736\t129049\n1737\t138870\n1738\t175432\n1739\t158056\n1740\t126099\n1741\t131400\n1742\t120186\n1743\t107670\n1744\t124161\n1745\t119751\n1746\t69213\n1747\t244588\n1748\t158579\n1749\t171121\n1750\t204674\n1751\t197126\n1752\t154696\n1753\t212452\n1754\t217188\n1755\t210022\n1756\t164596\n1757\t193396\n1758\t175972\n1759\t237313\n1760\t211740\n1761\t205253\n1762\t200003\n1763\t225378\n1764\t186645\n1765\t190925\n1766\t245131\n1767\t265137\n1768\t218189\n1769\t195778\n1770\t242823\n1771\t188953\n1772\t209638\n1773\t231374\n1774\t206726\n1775\t230581\n1776\t251781\n1777\t218552\n1778\t261698\n1779\t226485\n1780\t228521\n1781\t195545\n1782\t221560\n1783\t198930\n1784\t310805\n1785\t269163\n1786\t228054\n1787\t283345\n1788\t308276\n1789\t210121\n1790\t274399\n1791\t293654\n1792\t318406\n1793\t331913\n1794\t315676\n1795\t392871\n1796\t340866\n1797\t380698\n1798\t331089\n1799\t282968\n1800\t396410\n1801\t449703\n1802\t403139\n1803\t417588\n1804\t463852\n1805\t486590\n1806\t524144\n1807\t535984\n1808\t499940\n1809\t512051\n1810\t574674\n1811\t535171\n1812\t548692\n1813\t462951\n1814\t494826\n1815\t479964\n1816\t504589\n1817\t424104\n1818\t493872\n1819\t450715\n1820\t479947\n1821\t494238\n1822\t557673\n1823\t550232\n1824\t604162\n1825\t651623\n1826\t589847\n1827\t546345\n1828\t548479\n1829\t506860\n1830\t605748\n1831\t534837\n1832\t503569\n1833\t524131\n1834\t562245\n1835\t590608\n1836\t529515\n1837\t580979\n1838\t639642\n1839\t638325\n1840\t637559\n1841\t596557\n1842\t565148\n1843\t634126\n1844\t640257\n1845\t639868\n1846\t693457\n1847\t717847\n1848\t694813\n1849\t685382\n1850\t722874\n1851\t731859\n1852\t758407\n1853\t792931\n1854\t842747\n1855\t712098\n1856\t731172\n1857\t730070\n1858\t759970\n1859\t736641\n1860\t713954\n1861\t682538\n1862\t666068\n1863\t691411\n1864\t662462\n1865\t712976\n1866\t768103\n1867\t806576\n1868\t757318\n1869\t839297\n1870\t773580\n1871\t825962\n1872\t803667\n1873\t804873\n1874\t859210\n1875\t882809\n1876\t866509\n1877\t841654\n1878\t797915\n1879\t847116\n1880\t886554\n1881\t823480\n1882\t871698\n1883\t919559\n1884\t875294\n1885\t868183\n1886\t846639\n1887\t893869\n1888\t886230\n1889\t937625\n1890\t902171\n1891\t942274\n1892\t976135\n1893\t956426\n1894\t853559\n1895\t932469\n1896\t926907\n1897\t888715\n1898\t874876\n1899\t896870\n1900\t860451\n1901\t940296\n1902\t942394\n1903\t934148\n1904\t946422\n1905\t908512\n1906\t965442\n1907\t971455\n1908\t994764\n1909\t740047\n1910\t791200\n1911\t756574\n1912\t756824\n1913\t737472\n1914\t719588\n1915\t614660\n1916\t559792\n1917\t470268\n1918\t458154\n1919\t534826\n1920\t676521\n1921\t691051\n1922\t719799\n1923\t785838\n1924\t731215\n1925\t783398\n1926\t774013\n1927\t765067\n1928\t810151\n1929\t744590\n1930\t780206\n1931\t713258\n1932\t655923\n1933\t634004\n1934\t632688\n1935\t634286\n1936\t679506\n1937\t664179\n1938\t724530\n1939\t610813\n1940\t543114\n1941\t458410\n1942\t456469\n1943\t403995\n1944\t401994\n1945\t487590\n1946\t556546\n1947\t643722\n1948\t665713\n1949\t733026\n1950\t707151\n1951\t677086\n1952\t787594\n1953\t753689\n1954\t792309\n1955\t704378\n1956\t732616\n1957\t747421\n1958\t796416\n1959\t759061\n1960\t764020\n1961\t851547\n1962\t853486\n1963\t835252\n1964\t814205\n1965\t828048\n1966\t831558\n1967\t961595\n1968\t993293\n1969\t943182\n1970\t907483\n1971\t909879\n1972\t923743\n1973\t905853\n1974\t856947\n1975\t928652\n1976\t912046\n1977\t890694\n1978\t837576\n1979\t863412\n1980\t936821\n1981\t869247\n1982\t845594\n1983\t817864\n1984\t861483\n1985\t881537\n1986\t854299\n1987\t862274\n1988\t899577\n1989\t878579\n1990\t889742\n1991\t823059\n1992\t876977\n1993\t885259\n1994\t921152\n1995\t918626\n1996\t968589\n1997\t1011995\n1998\t1020268\n1999\t1093796\n2000\t1245117\n2001\t1212002\n2002\t1226853\n2003\t1189526\n2004\t1181723\n2005\t1066446\n2006\t1107491\n2007\t1093469\n2008\t992904\n2009\t480637\n"
+      },
+      "dateCreated": "Oct 30, 2015 10:12:52 AM",
+      "dateStarted": "Oct 30, 2015 10:27:23 AM",
+      "dateFinished": "Oct 30, 2015 10:29:14 AM",
+      "status": "FINISHED",
+      "progressUpdateIntervalMs": 500
+    },
+    {
+      "title": "Top 10 words since 1990",
+      "text": "%sql\nselect word, sum(count) as Total\nfrom ngram\nwhere year \u003e\u003d 1990\ngroup by word\norder by Total desc\nlimit 10",
+      "config": {
+        "colWidth": 6.0,
+        "graph": {
+          "mode": "multiBarChart",
+          "height": 300.0,
+          "optionOpen": false,
+          "keys": [
+            {
+              "name": "word",
+              "index": 0.0,
+              "aggr": "sum"
+            }
+          ],
+          "values": [
+            {
+              "name": "Total",
+              "index": 1.0,
+              "aggr": "sum"
+            }
+          ],
+          "groups": [],
+          "scatter": {
+            "xAxis": {
+              "name": "word",
+              "index": 0.0,
+              "aggr": "sum"
+            },
+            "yAxis": {
+              "name": "Total",
+              "index": 1.0,
+              "aggr": "sum"
+            }
+          }
+        },
+        "title": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "jobName": "paragraph_1446200836188_1503854952",
+      "id": "20151030-102716_705021338",
+      "result": {
+        "code": "SUCCESS",
+        "type": "TABLE",
+        "msg": "word\tTotal\nthe\t631289901\nof\t379867124\nand\t296017671\nto\t245679158\nin\t220768180\na\t200569851\nis\t116858303\nthat\t99669231\nfor\t87064731\nas\t75686211\n"
+      },
+      "dateCreated": "Oct 30, 2015 10:27:16 AM",
+      "dateStarted": "Oct 30, 2015 10:59:16 AM",
+      "dateFinished": "Oct 30, 2015 11:04:24 AM",
+      "status": "FINISHED",
+      "progressUpdateIntervalMs": 500
+    },
+    {
+      "title": "Total words per year",
+      "text": "%sql \nselect year, sum(count) total\nfrom ngram \ngroup by year\norder by year",
+      "config": {
+        "colWidth": 12.0,
+        "graph": {
+          "mode": "multiBarChart",
+          "height": 300.0,
+          "optionOpen": false,
+          "keys": [
+            {
+              "name": "year",
+              "index": 0.0,
+              "aggr": "sum"
+            }
+          ],
+          "values": [
+            {
+              "name": "total",
+              "index": 1.0,
+              "aggr": "sum"
+            }
+          ],
+          "groups": [],
+          "scatter": {
+            "xAxis": {
+              "name": "year",
+              "index": 0.0,
+              "aggr": "sum"
+            },
+            "yAxis": {
+              "name": "total",
+              "index": 1.0,
+              "aggr": "sum"
+            }
+          }
+        },
+        "title": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "jobName": "paragraph_1446201406022_-1536420990",
+      "id": "20151030-103646_713265845",
+      "result": {
+        "code": "SUCCESS",
+        "type": "TABLE",
+        "msg": "year\ttotal\n1541\t4069\n1547\t33299\n1551\t55261\n1562\t91938\n1576\t20795\n1582\t23582\n1584\t26130\n1588\t66211\n1590\t41708\n1591\t11796\n1592\t28424\n1593\t53843\n1594\t61316\n1595\t6474\n1596\t73449\n1597\t128568\n1598\t86647\n1599\t67723\n1600\t60627\n1602\t11714\n1603\t209210\n1605\t22764\n1606\t53162\n1607\t17742\n1608\t92137\n1609\t147229\n1611\t9723\n1612\t66162\n1613\t23539\n1615\t7257\n1617\t77000\n1619\t20207\n1620\t25101\n1621\t83701\n1623\t20274\n1627\t14834\n1629\t154493\n1631\t331138\n1632\t148096\n1634\t80203\n1636\t120807\n1638\t202286\n1639\t15323\n1640\t38289\n1641\t41917\n1642\t104121\n1643\t340607\n1644\t210923\n1645\t326322\n1646\t29826\n1647\t204723\n1648\t63520\n1649\t376043\n1650\t109352\n1651\t1274980\n1652\t90741\n1653\t397280\n1654\t336990\n1655\t80956\n1656\t160932\n1657\t709383\n1658\t562411\n1659\t1416038\n1660\t838050\n1661\t377872\n1662\t202043\n1663\t139182\n1664\t27037\n1665\t388544\n1666\t25681\n1667\t1003227\n1668\t650853\n1669\t143799\n1670\t510547\n1671\t553598\n1672\t86045\n1673\t275545\n1674\t98174\n1675\t1699762\n1676\t1017030\n1677\t1502991\n1678\t958504\n1679\t487580\n1680\t355033\n1681\t402526\n1682\t966428\n1683\t1131802\n1684\t190707\n1685\t1094048\n1686\t713364\n1687\t605445\n1688\t1654018\n1689\t685231\n1690\t331544\n1691\t146136\n1692\t248096\n1693\t1018012\n1694\t493198\n1695\t804531\n1696\t285264\n1697\t324977\n1698\t1142200\n1699\t1648230\n1700\t1313315\n1701\t2594609\n1702\t2908668\n1703\t2070832\n1704\t2228288\n1705\t2525189\n1706\t2822630\n1707\t3665695\n1708\t3544946\n1709\t2997027\n1710\t3886106\n1711\t4388420\n1712\t2750638\n1713\t3089247\n1714\t6438164\n1715\t3473297\n1716\t1819804\n1717\t3228753\n1718\t3989556\n1719\t3445318\n1720\t4902491\n1721\t3001017\n1722\t6233317\n1723\t4216953\n1724\t3503706\n1725\t4128515\n1726\t4275034\n1727\t5156378\n1728\t4362848\n1729\t5748294\n1730\t3696907\n1731\t4496224\n1732\t3778327\n1733\t4203470\n1734\t4725280\n1735\t4563295\n1736\t4561870\n1737\t4716568\n1738\t7392735\n1739\t7656061\n1740\t5128060\n1741\t4332122\n1742\t4373884\n1743\t4482769\n1744\t5015311\n1745\t4179779\n1746\t1810821\n1747\t15761574\n1748\t6055031\n1749\t8064865\n1750\t12328453\n1751\t8925136\n1752\t6784136\n1753\t10314210\n1754\t11691879\n1755\t10475328\n1756\t5460263\n1757\t8778405\n1758\t7217153\n1759\t14451239\n1760\t13572823\n1761\t11904716\n1762\t9432549\n1763\t12173777\n1764\t8364479\n1765\t9078440\n1766\t13346923\n1767\t16073547\n1768\t10881883\n1769\t9590762\n1770\t13663619\n1771\t9762407\n1772\t10076377\n1773\t11610279\n1774\t10092239\n1775\t10792788\n1776\t12866942\n1777\t11067317\n1778\t15546961\n1779\t14457072\n1780\t10109008\n1781\t9339242\n1782\t9834517\n1783\t9198724\n1784\t29600359\n1785\t14966823\n1786\t12287179\n1787\t19498513\n1788\t22493711\n1789\t11378438\n1790\t16462898\n1791\t18787551\n1792\t21728188\n1793\t24302643\n1794\t21414437\n1795\t31948796\n1796\t24485840\n1797\t30865138\n1798\t24560801\n1799\t20909125\n1800\t32604843\n1801\t50032637\n1802\t38701236\n1803\t41151405\n1804\t47859454\n1805\t50178252\n1806\t65706582\n1807\t57238624\n1808\t61943887\n1809\t60208878\n1810\t85212920\n1811\t81068096\n1812\t78531063\n1813\t54907406\n1814\t61792751\n1815\t60439071\n1816\t66535089\n1817\t58646822\n1818\t66765294\n1819\t59221561\n1820\t93343087\n1821\t80705208\n1822\t101484646\n1823\t108847024\n1824\t128302473\n1825\t135308466\n1826\t116910993\n1827\t99195644\n1828\t99598819\n1829\t88873547\n1830\t139655441\n1831\t103734084\n1832\t91910497\n1833\t101048191\n1834\t100491248\n1835\t116061585\n1836\t106181134\n1837\t123761835\n1838\t137021507\n1839\t155882563\n1840\t143945381\n1841\t117608916\n1842\t112962491\n1843\t132013813\n1844\t139999994\n1845\t130764965\n1846\t144008818\n1847\t147508116\n1848\t157112223\n1849\t139556410\n1850\t150931023\n1851\t156508964\n1852\t165885291\n1853\t193234712\n1854\t210660375\n1855\t141495657\n1856\t157650386\n1857\t159333241\n1858\t156069746\n1859\t136795473\n1860\t141441964\n1861\t126057588\n1862\t141756801\n1863\t134717630\n1864\t131724802\n1865\t147324466\n1866\t167909397\n1867\t170649218\n1868\t149545381\n1869\t183832074\n1870\t153909620\n1871\t178888908\n1872\t166979807\n1873\t170969177\n1874\t192971363\n1875\t225209679\n1876\t201367045\n1877\t198284776\n1878\t176417565\n1879\t192630543\n1880\t201403594\n1881\t182573933\n1882\t214222764\n1883\t256370377\n1884\t208332196\n1885\t222880353\n1886\t191937876\n1887\t223924180\n1888\t224113389\n1889\t229259658\n1890\t211279252\n1891\t241547698\n1892\t273330017\n1893\t253859655\n1894\t218419032\n1895\t246109698\n1896\t250211622\n1897\t226169408\n1898\t231686779\n1899\t235296107\n1900\t219409329\n1901\t249316687\n1902\t276806800\n1903\t271527288\n1904\t284665777\n1905\t261418579\n1906\t301551832\n1907\t312294778\n1908\t308739483\n1909\t138412301\n1910\t143880106\n1911\t152971329\n1912\t157285225\n1913\t145523870\n1914\t134279154\n1915\t100844330\n1916\t76412109\n1917\t65313624\n1918\t61057082\n1919\t80850653\n1920\t136963063\n1921\t125426905\n1922\t129763432\n1923\t191712279\n1924\t169397827\n1925\t180314299\n1926\t164078300\n1927\t175619867\n1928\t177780893\n1929\t159736238\n1930\t162277624\n1931\t153080276\n1932\t130887091\n1933\t115278619\n1934\t128800860\n1935\t141652562\n1936\t146905560\n1937\t139117861\n1938\t148422100\n1939\t122495881\n1940\t93098483\n1941\t66954534\n1942\t68727422\n1943\t55466642\n1944\t60038964\n1945\t80862271\n1946\t118138617\n1947\t138106475\n1948\t149713322\n1949\t170579860\n1950\t166222670\n1951\t166801721\n1952\t194081574\n1953\t181729166\n1954\t195613997\n1955\t160664274\n1956\t180548051\n1957\t190948598\n1958\t180892457\n1959\t157237784\n1960\t191032234\n1961\t209454044\n1962\t198729264\n1963\t200398328\n1964\t188440869\n1965\t198518944\n1966\t206635503\n1967\t259590194\n1968\t294512341\n1969\t252125944\n1970\t230683246\n1971\t221263257\n1972\t240637461\n1973\t231170588\n1974\t182595593\n1975\t213552860\n1976\t207063723\n1977\t203334857\n1978\t208275274\n1979\t219559025\n1980\t249188213\n1981\t220380081\n1982\t221759371\n1983\t229574644\n1984\t250666236\n1985\t260794956\n1986\t263698136\n1987\t265067250\n1988\t291525911\n1989\t282647825\n1990\t274980748\n1991\t245243600\n1992\t267252763\n1993\t265909808\n1994\t297998436\n1995\t324294270\n1996\t347395406\n1997\t401003070\n1998\t448837392\n1999\t560614132\n2000\t782619260\n2001\t745342339\n2002\t820390172\n2003\t755998318\n2004\t646813136\n2005\t601344521\n2006\t642563989\n2007\t690683957\n2008\t518887903\n2009\t89801862\n"
+      },
+      "dateCreated": "Oct 30, 2015 10:36:46 AM",
+      "dateStarted": "Oct 30, 2015 12:52:03 PM",
+      "dateFinished": "Oct 30, 2015 12:54:08 PM",
+      "status": "FINISHED",
+      "progressUpdateIntervalMs": 500
+    },
+    {
+      "title": "Top 25 words in the year 2000",
+      "text": "%sql\nselect word, sum(count) as value\nfrom ngram \nwhere year \u003d \u00272000\u0027 \nAND word like \u0027s%\u0027\ngroup by word\norder by value desc\nlimit 25",
+      "config": {
+        "colWidth": 12.0,
+        "graph": {
+          "mode": "multiBarChart",
+          "height": 300.0,
+          "optionOpen": false,
+          "keys": [
+            {
+              "name": "word",
+              "index": 0.0,
+              "aggr": "sum"
+            }
+          ],
+          "values": [
+            {
+              "name": "value",
+              "index": 1.0,
+              "aggr": "sum"
+            }
+          ],
+          "groups": [],
+          "scatter": {
+            "yAxis": {
+              "name": "value",
+              "index": 1.0,
+              "aggr": "sum"
+            },
+            "xAxis": {
+              "name": "word",
+              "index": 0.0,
+              "aggr": "sum"
+            }
+          }
+        },
+        "title": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "jobName": "paragraph_1446201000852_-315608917",
+      "id": "20151030-103000_12782965",
+      "result": {
+        "code": "SUCCESS",
+        "type": "TABLE",
+        "msg": "word\tvalue\nsome\t1246948\nso\t1199499\nsuch\t1180388\nsee\t998888\nshe\t957999\nshould\t809809\nsocial\t697443\nsystem\t567837\nsame\t548114\nstate\t456018\ns\t405635\nsaid\t393037\nschool\t392907\nstill\t358572\nsmall\t348822\nset\t348178\nsince\t342553\nstudy\t340285\nself\t338772\nsecond\t331682\nsupport\t299500\nsociety\t281530\nseen\t274449\nstudies\t273277\nservice\t271564\n"
+      },
+      "dateCreated": "Oct 30, 2015 10:30:00 AM",
+      "dateStarted": "Oct 30, 2015 2:55:10 PM",
+      "dateFinished": "Oct 30, 2015 2:56:58 PM",
+      "status": "FINISHED",
+      "progressUpdateIntervalMs": 500
+    },
+    {
+      "text": "%sql \nselect year, word, sum(count) as value\nfrom ngram\nWHERE year BETWEEN 1990 AND 2000\nAND word like \u0027%th%\u0027\norder by year\ngroup by year, word\norder by value desc\nlimit 25",
+      "config": {
+        "colWidth": 12.0,
+        "graph": {
+          "mode": "multiBarChart",
+          "height": 300.0,
+          "optionOpen": true,
+          "keys": [
+            {
+              "name": "year",
+              "index": 0.0,
+              "aggr": "sum",
+              "$$hashKey": "object:19354"
+            },
+            {
+              "name": "word",
+              "index": 1.0,
+              "aggr": "sum",
+              "$$hashKey": "object:19355"
+            }
+          ],
+          "values": [
+            {
+              "name": "word",
+              "index": 1.0,
+              "aggr": "sum",
+              "$$hashKey": "object:19642"
+            }
+          ],
+          "groups": [],
+          "scatter": {
+            "xAxis": {
+              "name": "year",
+              "index": 0.0,
+              "aggr": "sum"
+            },
+            "yAxis": {
+              "name": "word",
+              "index": 1.0,
+              "aggr": "avg"
+            }
+          }
+        }
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "jobName": "paragraph_1446201092020_-2142457991",
+      "id": "20151030-103132_1856216040",
+      "result": {
+        "code": "ERROR",
+        "type": "TEXT",
+        "msg": "missing EOF at \u0027group\u0027 near \u0027year\u0027; line 6 pos 0"
+      },
+      "dateCreated": "Oct 30, 2015 10:31:32 AM",
+      "dateStarted": "Oct 30, 2015 5:20:21 PM",
+      "dateFinished": "Oct 30, 2015 5:20:21 PM",
+      "status": "FINISHED",
+      "progressUpdateIntervalMs": 500
+    },
+    {
+      "text": "%sql\nselect year, len(word) AS wordlen\nfrom ngram\ngroup by year\norder by wordlen",
+      "config": {
+        "colWidth": 12.0,
+        "graph": {
+          "mode": "table",
+          "height": 300.0,
+          "optionOpen": false,
+          "keys": [],
+          "values": [],
+          "groups": [],
+          "scatter": {}
+        }
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "jobName": "paragraph_1446204682271_-835364763",
+      "id": "20151030-113122_1938564470",
+      "result": {
+        "code": "ERROR",
+        "type": "TEXT",
+        "msg": "java.lang.RuntimeException: Unable to instantiate org.apache.hadoop.hive.metastore.HiveMetaStoreClient"
+      },
+      "dateCreated": "Oct 30, 2015 11:31:22 AM",
+      "dateStarted": "Oct 30, 2015 5:00:39 PM",
+      "dateFinished": "Oct 30, 2015 5:01:03 PM",
+      "status": "FINISHED",
+      "progressUpdateIntervalMs": 500
+    },
+    {
+      "config": {},
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "jobName": "paragraph_1446217141624_-1320222609",
+      "id": "20151030-145901_1136770990",
+      "dateCreated": "Oct 30, 2015 2:59:01 PM",
+      "status": "READY",
+      "progressUpdateIntervalMs": 500
+    }
+  ],
+  "name": "Zeppelin Tutorial - eng-gb 1gram",
+  "id": "ngram-tutorial",
+  "angularObjects": {},
+  "config": {
+    "looknfeel": "default"
+  },
+  "info": {}
+}
